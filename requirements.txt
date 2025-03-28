@@ -1,0 +1,6 @@
+streamlit
+pandas
+openpyxl
+dask[complete]
+plotly
+matplotlib
