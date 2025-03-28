@@ -59,10 +59,22 @@ def prepare_pivot_count(df24, df25):
     merged = pd.concat([df24_grouped, df25_grouped], ignore_index=True)
     return merged
 
-pivot_count = prepare_pivot_count(df24, df25)
+# 피벗 함수 (volume 기준)
+def prepare_pivot_volume(df24, df25):
+    df24_grouped = df24.groupby(['iso', 'account_category'])['monthlyvol'].sum().reset_index(name='volume')
+    df24_grouped['year'] = 2024
 
-# 차트 + 테이블 출력 함수
-def plot_yoy_chart(df, iso, value_label):
+    df25_grouped = df25.groupby(['iso', 'account_category'])['monthlyvol'].sum().reset_index(name='volume')
+    df25_grouped['year'] = 2025
+
+    merged = pd.concat([df24_grouped, df25_grouped], ignore_index=True)
+    return merged
+
+pivot_count = prepare_pivot_count(df24, df25)
+pivot_volume = prepare_pivot_volume(df24, df25)
+
+# 공통 차트 함수
+def plot_yoy_chart(df, iso, value_label, value_col):
     if iso == "Total":
         temp = df.copy()
         label = "All ISOs"
@@ -73,8 +85,9 @@ def plot_yoy_chart(df, iso, value_label):
     fig = px.bar(
         temp,
         x='account_category',
-        y='count',
+        y=value_col,
         color='year',
+        color_discrete_map={2024: '#1f77b4', 2025: '#ff7f0e'},
         barmode='group',
         title=f"{value_label} - {label}",
         labels={'account_category': 'Account Type'}
@@ -89,10 +102,13 @@ def plot_yoy_chart(df, iso, value_label):
     st.plotly_chart(fig, use_container_width=True)
 
     # 테이블 형식: 행 = 연도, 열 = account type
-    table_df = temp.pivot_table(index='year', columns='account_category', values='count', aggfunc='sum').fillna(0).astype(int)
+    table_df = temp.pivot_table(index='year', columns='account_category', values=value_col, aggfunc='sum').fillna(0).astype(int)
     st.markdown("### 📊 Data Table")
     st.dataframe(table_df, use_container_width=True)
 
 # 출력
 st.subheader("📈 Account Count (YOY)")
-plot_yoy_chart(pivot_count, selected_iso, "Number of Accounts")
+plot_yoy_chart(pivot_count, selected_iso, "Number of Accounts", 'count')
+
+st.subheader("💰 Volume (YOY)")
+plot_yoy_chart(pivot_volume, selected_iso, "Monthly Volume", 'volume')
