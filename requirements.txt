@@ -4,3 +4,4 @@ openpyxl
 dask[complete]
 plotly
 matplotlib
+seaborn
