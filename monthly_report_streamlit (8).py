@@ -18,8 +18,8 @@ st.title("📊 YOY Monthly Report Dashboard")
 
 @st.cache_data
 def load_data():
-    df24 = pd.read_excel("202402_ApprovedDetailList.xlsx")
-    df25 = pd.read_excel("202502_ApprovedDetailList.xlsx")
+    df24 = pd.read_excel("Processed_Approved_202402.xlsx")
+    df25 = pd.read_excel("Processed_Approved_202502.xlsx")
     df24.columns = df24.columns.str.strip().str.lower()
     df25.columns = df25.columns.str.strip().str.lower()
     return df24, df25
