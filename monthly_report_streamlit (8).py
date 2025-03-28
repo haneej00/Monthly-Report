@@ -101,6 +101,14 @@ def plot_yoy_chart(df, iso, value_label):
 
     st.plotly_chart(fig, use_container_width=True)
 
+table_df = temp.pivot(index='Year', columns='category', values=value_label).fillna(0).astype(int)
+    if '2024' in table_df.index and '2025' in table_df.index:
+        yoy_row = (table_df.loc['2025'] - table_df.loc['2024']) / table_df.loc['2024'] * 100
+        yoy_row = yoy_row.replace([float('inf'), -float('inf')], 0).fillna(0).round(1)
+        table_df.loc['YoY (%)'] = yoy_row
+
+st.dataframe(table_df)
+
 # 출력
 st.subheader("📈 Account Count (YOY)")
 plot_yoy_chart(pivot_count, selected_iso, "Number of Accounts")
