@@ -96,29 +96,16 @@ def plot_yoy_chart(df, iso, value_label, value_col):
     fig.update_layout(
         height=400,
         xaxis_tickangle=-15,
-        title_font_size=16,
-        coloraxis_showscale=False,
-        legend_title_text='Year',
-        legend=dict(
-            itemsizing='constant',
-            orientation='h',
-            yanchor='bottom',
-            y=1.02,
-            xanchor='right',
-            x=1
-        )
+        title_font_size=16
     )
 
     st.plotly_chart(fig, use_container_width=True)
 
     # 테이블 형식: 행 = 연도 + YOY, 열 = account type
     table_df = temp.pivot_table(index='year', columns='account_category', values=value_col, aggfunc='sum').fillna(0)
-    yoy = ((table_df.loc[2025] - table_df.loc[2024]) / table_df.loc[2024].replace(0, pd.NA) * 100).round(2)
-    yoy.index.name = 'YOY'
-    table_df.loc['YOY'] = yoy.astype(str) + '%'
-
+    table_df.loc['YOY'] = ((table_df.loc[2025] - table_df.loc[2024]) / table_df.loc[2024].replace(0, pd.NA) * 100).round(2)
     st.markdown("### 📊 Data Table")
-    st.dataframe(table_df, use_container_width=True)
+    st.dataframe(table_df.astype(int, errors='ignore'), use_container_width=True)
 
 # 출력
 st.subheader("📈 Account Count (YOY)")
