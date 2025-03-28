@@ -50,14 +50,11 @@ else:
 
 # 피벗 함수 (account count 기준)
 def prepare_pivot_count(df24, df25):
-    df24_grouped = df24.groupby(['iso', 'account_category']).size().unstack(fill_value=0)
-    df25_grouped = df25.groupby(['iso', 'account_category']).size().unstack(fill_value=0)
-
+    df24_grouped = df24.groupby(['iso', 'account_category']).size().reset_index(name='count')
     df24_grouped['year'] = 2024
-    df25_grouped['year'] = 2025
 
-    df24_grouped = df24_grouped.reset_index().melt(id_vars=['iso', 'year'], var_name='category', value_name='count')
-    df25_grouped = df25_grouped.reset_index().melt(id_vars=['iso', 'year'], var_name='category', value_name='count')
+    df25_grouped = df25.groupby(['iso', 'account_category']).size().reset_index(name='count')
+    df25_grouped['year'] = 2025
 
     merged = pd.concat([df24_grouped, df25_grouped], ignore_index=True)
     return merged
@@ -75,12 +72,12 @@ def plot_yoy_chart(df, iso, value_label):
 
     fig = px.bar(
         temp,
-        x='category',
+        x='account_category',
         y='count',
         color='year',
         barmode='group',
         title=f"{value_label} - {label}",
-        labels={'category': 'Account Type'}
+        labels={'account_category': 'Account Type'}
     )
 
     fig.update_layout(
@@ -92,7 +89,7 @@ def plot_yoy_chart(df, iso, value_label):
     st.plotly_chart(fig, use_container_width=True)
 
     # 테이블 형식: 행 = 연도, 열 = account type
-    table_df = temp.pivot(index='year', columns='category', values='count').fillna(0).astype(int)
+    table_df = temp.pivot_table(index='year', columns='account_category', values='count', aggfunc='sum').fillna(0).astype(int)
     st.markdown("### 📊 Data Table")
     st.dataframe(table_df, use_container_width=True)
 
