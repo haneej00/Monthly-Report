@@ -48,19 +48,21 @@ if selected_label == "Total":
 else:
     selected_iso = int(selected_label.split(" - ")[0])
 
-# 피벗 함수
-def prepare_pivot(df24, df25, value_col):
-    grp_24 = df24.groupby(['iso', 'account_category'])[value_col].sum().unstack(fill_value=0)
-    grp_25 = df25.groupby(['iso', 'account_category'])[value_col].sum().unstack(fill_value=0)
-    yoy_df = pd.concat([grp_24.add_suffix(' (2024)'), grp_25.add_suffix(' (2025)')], axis=1).fillna(0)
-    melted = yoy_df.reset_index().melt(id_vars='iso', var_name='category_year', value_name=value_col)
-    melted['category'] = melted['category_year'].str.extract(r'^(.*?) \(')
-    melted['year'] = melted['category_year'].str.extract(r'\((\d{4})')
-    pivot = melted.pivot(index=['iso', 'category'], columns='year', values=value_col).fillna(0).astype(int).reset_index()
-    return pivot
+# 피벗 함수 (account count 기준)
+def prepare_pivot_count(df24, df25):
+    df24_grouped = df24.groupby(['iso', 'account_category']).size().unstack(fill_value=0)
+    df25_grouped = df25.groupby(['iso', 'account_category']).size().unstack(fill_value=0)
 
-pivot_count = prepare_pivot(df24.assign(dummy=1), df25.assign(dummy=1), 'dummy')
-pivot_vol = prepare_pivot(df24, df25, 'monthlyvol')
+    df24_grouped['year'] = 2024
+    df25_grouped['year'] = 2025
+
+    df24_grouped = df24_grouped.reset_index().melt(id_vars=['iso', 'year'], var_name='category', value_name='count')
+    df25_grouped = df25_grouped.reset_index().melt(id_vars=['iso', 'year'], var_name='category', value_name='count')
+
+    merged = pd.concat([df24_grouped, df25_grouped], ignore_index=True)
+    return merged
+
+pivot_count = prepare_pivot_count(df24, df25)
 
 # 차트 + 테이블 출력 함수
 def plot_yoy_chart(df, iso, value_label):
@@ -71,14 +73,11 @@ def plot_yoy_chart(df, iso, value_label):
         temp = df[df['iso'] == iso].copy()
         label = iso_dict.get(iso, str(iso))
 
-    temp_melted = temp.melt(id_vars='category', value_vars=['2024', '2025'],
-                            var_name='Year', value_name=value_label)
-
     fig = px.bar(
-        temp_melted,
+        temp,
         x='category',
-        y=value_label,
-        color='Year',
+        y='count',
+        color='year',
         barmode='group',
         title=f"{value_label} - {label}",
         labels={'category': 'Account Type'}
@@ -92,17 +91,11 @@ def plot_yoy_chart(df, iso, value_label):
 
     st.plotly_chart(fig, use_container_width=True)
 
-    # 👉 테이블 생성
-    table_df = temp.set_index('category')
-    table_df['YOY'] = ((table_df['2025'] - table_df['2024']) / table_df['2024'].replace(0, pd.NA)) * 100
-    table_df = table_df[['2024', '2025', 'YOY']].reset_index().round(2)
-
+    # 테이블 형식: 행 = 연도, 열 = account type
+    table_df = temp.pivot(index='year', columns='category', values='count').fillna(0).astype(int)
     st.markdown("### 📊 Data Table")
     st.dataframe(table_df, use_container_width=True)
 
 # 출력
 st.subheader("📈 Account Count (YOY)")
 plot_yoy_chart(pivot_count, selected_iso, "Number of Accounts")
-
-st.subheader("💰 Volume (YOY)")
-plot_yoy_chart(pivot_vol, selected_iso, "Monthly Volume")
