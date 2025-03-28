@@ -88,7 +88,7 @@ def plot_yoy_chart(df, iso, value_label, value_col):
         y=value_col,
         color='year',
         color_discrete_map={2024: '#1f77b4', 2025: '#ff7f0e'},
-        barmode='group',
+        barmode='group',  # 여기서 'relative' 또는 'stack'이 아니라 'group'으로 변경됨
         title=f"{value_label} - {label}",
         labels={'account_category': 'Account Type'}
     )
