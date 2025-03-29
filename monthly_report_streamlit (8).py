@@ -77,6 +77,7 @@ pivot_volume = prepare_pivot_volume(df24, df25)
 def plot_yoy_chart(df, iso, value_label, value_col):
     if iso == "Total":
         temp = df.copy()
+        temp = temp.groupby(['account_category', 'year'])[value_col].sum().reset_index()
         label = "All ISOs"
     else:
         temp = df[df['iso'] == iso].copy()
