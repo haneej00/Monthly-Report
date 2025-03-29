@@ -1,11 +1,14 @@
+import streamlit as st
+import plotly.express as px
+import pandas as pd
+
+# cancellation_summary와 selected_iso가 이 코드 이전에 정의되어 있어야 합니다.
+
 def plot_cancellation_chart(df, iso):
     if iso == "Total":
         temp = df.groupby('year')[['account_count', 'volume_sum', 'profit_sum']].sum().reset_index()
     else:
         temp = df[df['iso'] == iso][['year', 'account_count', 'volume_sum', 'profit_sum']].copy()
-
-    import plotly.express as px
-    import streamlit as st
 
     fig = px.bar(
         temp,
@@ -29,6 +32,3 @@ def plot_cancellation_chart(df, iso):
     table_df[['volume_sum', 'profit_sum']] = table_df[['volume_sum', 'profit_sum']].applymap(lambda x: f"${x:,.0f}" if isinstance(x, (int, float)) else x)
     st.markdown("### 📊 Cancellation Data Table")
     st.dataframe(table_df, use_container_width=True)
-
-# Ensure this function is called after it's defined
-plot_cancellation_chart(cancellation_summary, selected_iso)
