@@ -65,6 +65,7 @@ def prepare_cancellation_summary(cc24, cc25):
 cancellation_summary = prepare_cancellation_summary(cc24, cc25)
 
 # 취소 시각화 함수
+
 def plot_cancellation_chart(df, iso):
     if iso == "Total":
         temp = df.groupby('year')[['account_count', 'volume_sum', 'profit_sum']].sum().reset_index()
@@ -87,6 +88,14 @@ def plot_cancellation_chart(df, iso):
     fig.update_traces(texttemplate='%{text:,.0f}', textposition='outside')
     fig.update_layout(height=400, xaxis_tickangle=-15)
     st.plotly_chart(fig, use_container_width=True)
+
+    # 테이블 형식
+    temp_pivot = temp.set_index('year')[['account_count', 'volume_sum', 'profit_sum']]
+    table_df = temp_pivot.copy()
+    table_df.loc['YOY'] = ((table_df.loc[2025] - table_df.loc[2024]) / table_df.loc[2024].replace(0, pd.NA) * 100).round(1).astype(str) + '%'
+    table_df[['volume_sum', 'profit_sum']] = table_df[['volume_sum', 'profit_sum']].applymap(lambda x: f"${x:,.0f}" if isinstance(x, (int, float)) else x)
+    st.markdown("### 📊 Cancellation Data Table")
+    st.dataframe(table_df, use_container_width=True)
 
 # 출력
 st.subheader("📉 Cancellation Overview")
