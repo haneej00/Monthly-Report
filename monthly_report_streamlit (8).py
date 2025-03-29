@@ -127,12 +127,15 @@ def plot_yoy_chart(df, iso, value_label, value_col):
     st.plotly_chart(fig, use_container_width=True)
 
     # 테이블 형식: 행 = 연도 + YOY, 열 = account type
-    table_df = temp.pivot_table(index='year', columns='account_category', values=value_col, aggfunc='sum').fillna(0)
+    raw_df = temp.pivot_table(index='year', columns='account_category', values=value_col, aggfunc='sum').fillna(0)
     if value_col == 'volume':
-        table_df = table_df.round(1).astype(str) + ' $'
-    yoy = ((table_df.loc['2025'] if '2025' in table_df.index else 0).astype(float) - (table_df.loc['2024'] if '2024' in table_df.index else 0).astype(float)) / (table_df.loc['2024'].replace('0 $', pd.NA).str.replace(' \$', '', regex=True).astype(float) if '2024' in table_df.index else 1) * 100
-    yoy = yoy.round(2).astype(str) + '%'
-    table_df.loc['YOY'] = yoy
+        table_df = raw_df.round(1).astype(str) + ' $'
+    else:
+        table_df = raw_df.astype(int)
+
+    if 2024 in raw_df.index and 2025 in raw_df.index:
+        yoy = ((raw_df.loc[2025] - raw_df.loc[2024]) / raw_df.loc[2024].replace(0, pd.NA)) * 100
+        table_df.loc['YOY'] = yoy.round(2).astype(str) + '%'
 
     st.markdown("### 📊 Data Table")
     st.dataframe(table_df, use_container_width=True)
