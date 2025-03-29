@@ -15,6 +15,11 @@ def load_data():
     cc25 = pd.read_excel("Processed_Cancellation_202502.xlsx")
     for df in [df24, df25, cc24, cc25]:
         df.columns = df.columns.str.strip().str.lower()
+    # rename cancellation columns to match expected format
+    for df in [cc24, cc25]:
+        df.rename(columns={
+            'volume': 'monthlyvol'
+        }, inplace=True)
     return df24, df25, cc24, cc25
 
 df24, df25, cc24, cc25 = load_data()
