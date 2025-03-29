@@ -176,29 +176,31 @@ st.subheader("📉 Cancellation Overview")
 
 def plot_cancellation_chart(df, iso):
     if iso == "Total":
-        temp = df.groupby('year')[['account_count']].sum().reset_index()
+        temp = df.groupby('year')[['account_count', 'volume_sum', 'profit_sum']].sum().reset_index()
     else:
-        temp = df[df['iso'] == iso][['year', 'account_count']].copy()
+        temp = df[df['iso'] == iso].copy()
+
+    temp_melted = temp.melt(id_vars='year', var_name='metric', value_name='value')
 
     fig = px.bar(
-        temp,
-        x='year',
-        y='account_count',
+        temp_melted,
+        x='metric',
+        y='value',
         color='year',
-        text='account_count',
+        barmode='group',
+        text='value',
         color_discrete_map={2024: '#1f77b4', 2025: '#ff7f0e'},
-        title="🛑 Cancellation Count (YOY)"
+        title="🛑 Cancellation Summary - Accounts, Volume, Profit"
     )
 
     fig.update_traces(texttemplate='%{text:,.0f}', textposition='outside')
     fig.update_layout(height=400, xaxis_tickangle=-15)
     st.plotly_chart(fig, use_container_width=True)
 
-    table_df = temp.set_index('year')[['account_count']].copy()
-    if 2024 in table_df.index and 2025 in table_df.index:
-        yoy = ((table_df.loc[2025, 'account_count'] - table_df.loc[2024, 'account_count']) / table_df.loc[2024, 'account_count']) * 100
-        table_df.loc['YOY'] = [f"{yoy.round(1)}%"]
-
+    temp_pivot = temp.set_index('year')[['account_count', 'volume_sum', 'profit_sum']]
+    table_df = temp_pivot.copy()
+    table_df.loc['YOY'] = ((table_df.loc[2025] - table_df.loc[2024]) / table_df.loc[2024].replace(0, pd.NA) * 100).round(1).astype(str) + '%'
+    table_df[['volume_sum', 'profit_sum']] = table_df[['volume_sum', 'profit_sum']].applymap(lambda x: f"${x:,.0f}" if isinstance(x, (int, float)) else x)
     st.markdown("### 📊 Cancellation Data Table")
     st.dataframe(table_df, use_container_width=True)
 
