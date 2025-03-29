@@ -200,7 +200,7 @@ def plot_cancellation_chart(df, iso):
     temp_pivot = temp.set_index('year')[['account_count', 'volume_sum', 'profit_sum']]
     table_df = temp_pivot.copy()
     table_df.loc['YOY'] = ((table_df.loc[2025] - table_df.loc[2024]) / table_df.loc[2024].replace(0, pd.NA) * 100).round(1).astype(str) + '%'
-    table_df[['volume_sum', 'profit_sum']] = table_df[['volume_sum', 'profit_sum']].applymap(lambda x: f"${x:,.0f}" if isinstance(x, (int, float)) else x)
+    #table_df[['volume_sum', 'profit_sum']] = table_df[['volume_sum', 'profit_sum']].applymap(lambda x: f"${x:,.0f}" if isinstance(x, (int, float)) else x)
     st.markdown("### 📊 Cancellation Data Table")
     st.dataframe(table_df, use_container_width=True)
 
