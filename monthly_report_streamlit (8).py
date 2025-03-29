@@ -82,16 +82,24 @@ def plot_yoy_chart(df, iso, value_label, value_col):
         temp = df[df['iso'] == iso].copy()
         label = iso_dict.get(iso, str(iso))
 
+    if value_col == 'volume':
+        temp[value_col] = temp[value_col].round(1)
+        hover_format = '$%{y:.1f}'
+    else:
+        hover_format = '%{y}'
+
     fig = px.bar(
         temp,
         x='account_category',
         y=value_col,
         color='year',
         color_discrete_map={2024: '#1f77b4', 2025: '#ff7f0e'},
-        barmode='group',  # 여기서 'relative' 또는 'stack'이 아니라 'group'으로 변경됨
+        barmode='group',
         title=f"{value_label} - {label}",
         labels={'account_category': 'Account Type'}
     )
+
+    fig.update_traces(hovertemplate=hover_format)
 
     fig.update_layout(
         height=400,
@@ -113,6 +121,8 @@ def plot_yoy_chart(df, iso, value_label, value_col):
 
     # 테이블 형식: 행 = 연도 + YOY, 열 = account type
     table_df = temp.pivot_table(index='year', columns='account_category', values=value_col, aggfunc='sum').fillna(0)
+    if value_col == 'volume':
+        table_df = table_df.round(1)
     yoy = ((table_df.loc[2025] - table_df.loc[2024]) / table_df.loc[2024].replace(0, pd.NA) * 100).round(2)
     yoy.index.name = 'YOY'
     table_df.loc['YOY'] = yoy.astype(str) + '%'
