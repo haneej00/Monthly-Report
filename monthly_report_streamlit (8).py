@@ -85,7 +85,7 @@ def plot_yoy_chart(df, iso, value_label, value_col):
 
     if value_col == 'volume':
         temp[value_col] = temp[value_col].round(1)
-        hover_format = '$%{y:.1f}'
+        hover_format = '$%{y:,.1f}'
     else:
         hover_format = '%{y}'
 
@@ -105,7 +105,7 @@ def plot_yoy_chart(df, iso, value_label, value_col):
         labels={'account_category': 'Account Type'}
     )
 
-    fig.update_traces(hovertemplate=hover_format, texttemplate='%{text}', textposition='outside')
+    fig.update_traces(hovertemplate=hover_format, texttemplate='%{text:,.0f}', textposition='outside')
 
     fig.update_layout(
         height=400,
@@ -130,13 +130,13 @@ def plot_yoy_chart(df, iso, value_label, value_col):
     # 테이블 형식: 행 = 연도 + YOY, 열 = account type
     raw_df = temp.pivot_table(index='year', columns='account_category', values=value_col, aggfunc='sum').fillna(0)
     if value_col == 'volume':
-        table_df = '$' +raw_df.round(1).astype(str) 
+        table_df = raw_df.round(0).applymap(lambda x: f"${x:,.0f}")
     else:
         table_df = raw_df.astype(int)
 
     if 2024 in raw_df.index and 2025 in raw_df.index:
         yoy = ((raw_df.loc[2025] - raw_df.loc[2024]) / raw_df.loc[2024].replace(0, pd.NA)) * 100
-        table_df.loc['YOY'] = yoy.round(2).astype(str) + '%'
+        table_df.loc['YOY'] = yoy.round(1).astype(str) + '%'
 
     st.markdown("### 📊 Data Table")
     st.dataframe(table_df, use_container_width=True)
