@@ -151,10 +151,29 @@ plot_yoy_chart(pivot_count, selected_iso, "Number of Accounts", 'count')
 st.subheader("💰 Volume (YOY)")
 plot_yoy_chart(pivot_volume, selected_iso, "Monthly Volume", 'volume')
 
+# 취소 요약 데이터 준비
+def prepare_cancellation_summary(cc24, cc25):
+    cc24_grouped = cc24.groupby('iso').agg(
+        account_count=('mid', 'count'),
+        volume_sum=('monthlyvol', 'sum'),
+        profit_sum=('profit', 'sum')
+    ).reset_index()
+    cc24_grouped['year'] = 2024
+
+    cc25_grouped = cc25.groupby('iso').agg(
+        account_count=('mid', 'count'),
+        volume_sum=('monthlyvol', 'sum'),
+        profit_sum=('profit', 'sum')
+    ).reset_index()
+    cc25_grouped['year'] = 2025
+
+    return pd.concat([cc24_grouped, cc25_grouped], ignore_index=True)
+
+cancellation_summary = prepare_cancellation_summary(cc24, cc25)
+
 # 출력: 취소 리포트
 st.subheader("📉 Cancellation Overview")
 
-# 취소 시각화 함수
 def plot_cancellation_chart(df, iso):
     if iso == "Total":
         temp = df.groupby('year')[['account_count', 'volume_sum', 'profit_sum']].sum().reset_index()
