@@ -130,7 +130,7 @@ def plot_yoy_chart(df, iso, value_label, value_col):
     # 테이블 형식: 행 = 연도 + YOY, 열 = account type
     raw_df = temp.pivot_table(index='year', columns='account_category', values=value_col, aggfunc='sum').fillna(0)
     if value_col == 'volume':
-        table_df = raw_df.round(1).astype(str) + ' $'
+        table_df = '$' +raw_df.round(1).astype(str) 
     else:
         table_df = raw_df.astype(int)
 
