@@ -88,23 +88,30 @@ def plot_yoy_chart(df, iso, value_label, value_col):
     else:
         hover_format = '%{y}'
 
+    # 막대를 account_category가 아닌 year 기준으로 나란히 정렬
+    temp_bar = temp.pivot(index='account_category', columns='year', values=value_col).fillna(0).reset_index()
+    temp_bar = temp_bar.melt(id_vars='account_category', var_name='year', value_name=value_col)
+
     fig = px.bar(
-        temp,
+        temp_bar,
         x='account_category',
         y=value_col,
         color='year',
-        color_discrete_map={2024: '#1f77b4', 2025: '#ff7f0e'},
         barmode='group',
+        color_discrete_map={2024: '#1f77b4', 2025: '#ff7f0e'},
+        text=value_col,
         title=f"{value_label} - {label}",
         labels={'account_category': 'Account Type'}
     )
 
-    fig.update_traces(hovertemplate=hover_format)
+    fig.update_traces(hovertemplate=hover_format, texttemplate='%{text}', textposition='outside')
 
     fig.update_layout(
         height=400,
         xaxis_tickangle=-15,
         title_font_size=16,
+        uniformtext_minsize=8,
+        uniformtext_mode='hide',
         coloraxis_showscale=False,
         legend_title_text='Year',
         legend=dict(
@@ -122,10 +129,10 @@ def plot_yoy_chart(df, iso, value_label, value_col):
     # 테이블 형식: 행 = 연도 + YOY, 열 = account type
     table_df = temp.pivot_table(index='year', columns='account_category', values=value_col, aggfunc='sum').fillna(0)
     if value_col == 'volume':
-        table_df = table_df.round(1)
-    yoy = ((table_df.loc[2025] - table_df.loc[2024]) / table_df.loc[2024].replace(0, pd.NA) * 100).round(2)
-    yoy.index.name = 'YOY'
-    table_df.loc['YOY'] = yoy.astype(str) + '%'
+        table_df = table_df.round(1).astype(str) + ' $'
+    yoy = ((table_df.loc['2025'] if '2025' in table_df.index else 0).astype(float) - (table_df.loc['2024'] if '2024' in table_df.index else 0).astype(float)) / (table_df.loc['2024'].replace('0 $', pd.NA).str.replace(' \$', '', regex=True).astype(float) if '2024' in table_df.index else 1) * 100
+    yoy = yoy.round(2).astype(str) + '%'
+    table_df.loc['YOY'] = yoy
 
     st.markdown("### 📊 Data Table")
     st.dataframe(table_df, use_container_width=True)
