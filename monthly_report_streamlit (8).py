@@ -2,7 +2,7 @@ import streamlit as st
 import plotly.express as px
 import pandas as pd
 
-# cancellation_summary와 selected_iso가 이 코드 이전에 정의되어 있어야 합니다.
+# cancellation_summary와 selected_iso는 외부에서 정의된 값 사용 전제로 제거
 
 def plot_cancellation_chart(df, iso):
     if iso == "Total":
@@ -32,3 +32,7 @@ def plot_cancellation_chart(df, iso):
     table_df[['volume_sum', 'profit_sum']] = table_df[['volume_sum', 'profit_sum']].applymap(lambda x: f"${x:,.0f}" if isinstance(x, (int, float)) else x)
     st.markdown("### 📊 Cancellation Data Table")
     st.dataframe(table_df, use_container_width=True)
+
+# 대시보드에 출력 (기존 코드에서 cancellation_summary, selected_iso가 정의된 이후 위치해야 함)
+# st.subheader("📉 Cancellation Overview")
+# plot_cancellation_chart(cancellation_summary, selected_iso)
